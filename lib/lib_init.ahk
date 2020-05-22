@@ -24,7 +24,14 @@ if(loadingAnimation != "0")
 ;  	gosub, language_Traditional_Chinese
 ;  else
 ;  	gosub, language_English
-gosub, language_Simplified_Chinese
+
+
+if(isLangChinese())
+{
+    gosub, language_Simplified_Chinese
+} else {
+    gosub, language_English
+}
 ;------------  /language -----------
 
 gosub, settingsInit ;初始化设置

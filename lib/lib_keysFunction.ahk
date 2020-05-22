@@ -7,7 +7,7 @@ keyFunc_doNothing(){
 }
 
 keyFunc_test(){
-    MsgBox, , , testing, 0.3
+    MsgBox, , , testing, 1
     return
 }
 
@@ -18,6 +18,11 @@ keyFunc_send(p){
 
 keyFunc_run(p){
     run, % p
+    return
+}
+
+keyFunc_toggleCapsLock(){
+    SetCapsLockState, % GetKeyState("CapsLock","T") ? "Off" : "On"
     return
 }
 
@@ -47,14 +52,14 @@ keyFunc_mouseSpeedDecrease(){
 }
 
 
-keyFunc_moveLeft(){
-    SendInput,{left}
+keyFunc_moveLeft(i:=1){
+    SendInput, {left %i%}
     return
 }
 
 
-keyFunc_moveRight(){
-    SendInput,{right}
+keyFunc_moveRight(i:=1){
+    SendInput, {right %i%}
     Return
 }
 
@@ -87,14 +92,14 @@ keyFunc_moveDown(i:=1){
 }
 
 
-keyFunc_moveWordLeft(){
-    SendInput,^{Left}
+keyFunc_moveWordLeft(i:=1){
+    SendInput,^{Left %i%}
     Return
 }
 
 
-keyFunc_moveWordRight(){
-    SendInput,^{Right}
+keyFunc_moveWordRight(i:=1){
+    SendInput,^{Right %i%}
     Return
 }
 
@@ -107,6 +112,24 @@ keyFunc_backspace(){
 
 keyFunc_delete(){
     SendInput,{delete}
+    Return
+}
+
+keyFunc_deleteAll(){
+    SendInput, ^{a}{delete}
+    Return
+}
+
+keyFunc_deleteWord(){
+    SendInput, +^{left}
+    SendInput, {delete}
+    Return
+}
+
+
+keyFunc_forwardDeleteWord(){
+    SendInput, +^{right}
+    SendInput, {delete}
     Return
 }
 
@@ -145,21 +168,55 @@ keyFunc_home(){
 }
 
 
+keyFunc_moveToPageBeginning(){
+    SendInput, ^{Home}
+    Return
+}
+
+
+keyFunc_moveToPageEnd(){
+    SendInput, ^{End}
+    Return
+}
+
 keyFunc_deleteLine(){
     SendInput,{End}+{home}{bs}
     Return
 }
 
+keyFunc_deleteToLineBeginning(){
+    SendInput,+{Home}{bs}
+    Return
+}
+
+keyFunc_deleteToLineEnd(){
+    SendInput,+{End}{bs}
+    Return
+}
+
+keyFunc_deleteToPageBeginning(){
+    SendInput,+^{Home}{bs}
+    Return
+}
+
+keyFunc_deleteToPageEnd(){
+    SendInput,+^{End}{bs}
+    Return
+}
 
 keyFunc_enterWherever(){
     SendInput,{End}{Enter}
     Return
 }
 
+keyFunc_esc(){
+    SendInput, {Esc}
+    Return
+}
 
 keyFunc_enter(){
-SendInput, {Enter}
-Return
+    SendInput, {Enter}
+    Return
 }
 
 ;双字符
@@ -511,14 +568,14 @@ keyFunc_selectDown(i:=1){
 }
 
 
-keyFunc_selectLeft(){
-    SendInput, +{Left}
+keyFunc_selectLeft(i:=1){
+    SendInput, +{Left %i%}
     return
 }
 
 
-keyFunc_selectRight(){
-    SendInput, +{Right}
+keyFunc_selectRight(i:=1){
+    SendInput, +{Right %i%}
     return
 }
 
@@ -534,15 +591,40 @@ keyFunc_selectEnd(){
     return
 }
 
-
-keyFunc_selectWordLeft(){
-    SendInput, +^{Left}
+keyFunc_selectToPageBeginning(){
+    SendInput, +^{Home}
     return
 }
 
 
-keyFunc_selectWordRight(){
+keyFunc_selectToPageEnd(){
+    SendInput, +^{End}
+    return
+}
+
+
+keyFunc_selectCurrentWord(){
+    SendInput, ^{Left}
     SendInput, +^{Right}
+    return
+}
+
+
+keyFunc_selectCurrentLine(){
+    SendInput, {Home}
+    SendInput, +{End}
+    return
+}
+
+
+keyFunc_selectWordLeft(i:=1){
+    SendInput, +^{Left %i%}
+    return
+}
+
+
+keyFunc_selectWordRight(i:=1){
+    SendInput, +^{Right %i%}
     return
 }
 
@@ -590,7 +672,12 @@ keyFunc_tabScript(){
 
 
 keyFunc_openCpasDocs(){
-    Run, http://cjkis.me/capslock+
+    if(isLangChinese())
+    {
+        Run, https://capslox.com/capslock-plus
+    } else {
+        Run, https://capslox.com/capslock-plus/en.html
+    }
     return
 }
 

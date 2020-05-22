@@ -1,4 +1,29 @@
-﻿;  #Include lib_functions.ahk ;引入函数库
+﻿global LastHw:=0x000000
+global LostFocusHw2Handlers:=Object()
+; For catching unfocus events
+HandleWindowMessage( p_w, p_l, p_m, p_hw )
+{
+    global
+    local control
+    msgbox, % p_l
+    setformat, integerfast, h
+    if(LastHw==0x000000)
+    {
+        LastHw:=p_l
+        return
+    }
+    if(LastHw!=p_l)
+    {
+        aLabel=% LostFocusHw2Handlers[LastHw]
+        if (IsLabel(aLabel))
+            gosub %aLabel%
+        LastHw:=p_l
+    }
+    return
+}
+
+
+;  #Include lib_functions.ahk ;引入函数库
 isFolder(str)
 {
     if(InStr(FileExist(str),"D"))
@@ -377,9 +402,12 @@ CLq()
 
     IfWinExist, ahk_id %GuiHwnd%
     {
-        ControlSetText, , %selText%, ahk_id %editHwnd%
-        WinActivate, ahk_id %GuiHwnd%
-        CapsLock2:=""
+        ; ControlSetText, , %selText%, ahk_id %GuiHwnd%
+        ; WinActivate, ahk_id %GuiHwnd%
+        ; CapsLock2:=""
+        Gui, %GuiHwnd%:Default
+        gosub, QGuiClose
+
         return
     }
 
@@ -409,11 +437,23 @@ CLq()
         
         WinSetTitle, ahk_id %GuiHwnd%, , Qbar ;上面show出窗口后会把窗口标题改成ahk_id xxxx，改回来
 
-        
         CapsLock2:=""
-        Return
-        
+
+
+        SetTimer, closeWhenUnfocus, 50
+
+        return
+
+        closeWhenUnfocus:
+        IfWinNotActive, ahk_id %GuiHwnd%
+        {
+            SetTimer, ,Off
+            Gui, %GuiHwnd%:Default
+            gosub, QGuiClose
+        }
+        return
     }
+
 
     guiStart:
     ;guiStart---start
@@ -535,6 +575,7 @@ CLq()
     ;---edit---end
 
     
+    
     { ;---ListView---start
 
     ;  Gui, Font, c%listColor% s10, Microsoft YaHei UI ;设置字体
@@ -570,6 +611,7 @@ CLq()
 
     Gui, Add, Button, Default  w0 h0, Submit
     OnMessage(0x201, "MoveWin") ;光标在gui非控件地方可以拖动窗口
+
     ;原本gui在第一次打开要显示，但是现在在第一次运行不显示，并且运行程序自己先运行一遍，相当于开启即运行一遍，但是第一遍运行不显示，这样就可以做到提前缓存图标，提高用户第一次(其实实际是第二次了)打开的感受
     Gui, Show, Hide Center w%guiW% h%guiH%, Qbar ;--cjk1
     
@@ -1246,7 +1288,7 @@ listType1Init(folderPath)
         }
         if(loopFilesCount = 0) ;if is a empty folder
         {
-            LV_Add("Icon999999", 0, "<空文件夹>")
+            LV_Add("Icon999999", 0, lang_clq_emptyFolder)
         }
         SetTimer, loopFolderTimeLimit, Off
     ;  }
@@ -1340,9 +1382,8 @@ MoveCaret: ;edit光标到开头
 
 QGuiClose:
 QGuiEscape:
-listHide1:={}
-
-Gui, Cancel
+    listHide1:={}
+    Gui, Cancel
 return
 
 appendSet(sec,key,val)
@@ -1423,6 +1464,8 @@ qrunBy(_exe, _paramStr:="", ifAdmin:=false)
             return true
         }
     }
+
+
     return false
 }
 
@@ -1430,7 +1473,9 @@ ButtonSubmit:
 ;---ButtonSubmit---start
 {
     ctrlDn:=GetKeyState("ctrl","P")
-        
+
+    ControlGet, isLVShowIsVisibleWhenSubmit, Visible, , , ahk_id %LV_show_Hwnd%
+
     Gui, Submit
 
     uselessStr:=""
@@ -1584,16 +1629,29 @@ ButtonSubmit:
         ; --LEVEL 2 END--
         
         ; --FINALLY--
-        if (cmd1="s"||cmd1="bd") 
+        if (cmd1="s")
         {
             paramStr:=UTF8encode(paramStr)
-            run  https://www.baidu.com/s?wd=%paramStr%
+            if(isLangChinaChinese())
+            {
+                run https://www.baidu.com/s?wd=%paramStr%
+            }
+            else
+            {
+                run https://www.google.com/search?q=%paramStr%
+            }
+            return
+        }
+        if (cmd1="bd")
+        {
+            paramStr:=UTF8encode(paramStr)
+            run https://www.baidu.com/s?wd=%paramStr%
             return
         }
         if (cmd1="g"||cmd1="gg") ;google
         {
             paramStr:=UTF8encode(paramStr)
-            run  https://www.google.com/search?q=%paramStr%
+            run https://www.google.com/search?q=%paramStr%
             return
         }
         if (cmd1="tb") ;淘宝
@@ -1614,6 +1672,23 @@ ButtonSubmit:
             run https://developer.mozilla.org/zh-CN/search?q=%paramStr%
             return 
         }
+    }
+
+    ; 如果当前下拉列表有选中项的话，运行
+    Gui, ListView, LV_show ;目标切换到LV_show
+    if(isLVShowIsVisibleWhenSubmit && LV_GetCount())  ;当LV_show在回车时是显示状态，并且有数据（即有匹配的文件）
+    {
+        ; gosub, tabAction
+        ; ControlGetText, editText, , ahk_id %editHwnd%
+        ControlGet, listSelected, List, Selected Col2, , ahk_id %LV_show_Hwnd%
+        listSelected:=getShortSetKey(listSelected)
+        ; 如果是文件路径，拼接上输入框的和选中的
+        if(LVlistsType == 1)
+        {
+            ControlGetText, editText, , ahk_id %editHwnd%
+            listSelected := RegExReplace(editText, "i)(?<=\\)[^\\]*$", listSelected) 
+        }
+        inputStr:=listSelected
     }
 
     if (inputStr) ;如果不是以上的结果，而又非空
@@ -1705,8 +1780,13 @@ ButtonSubmit:
             run % strRun
             return
         }
-        
-        run https://www.baidu.com/s?wd=%inputStr%
+
+        if(isLangChinaChinese())
+        {
+            run https://www.baidu.com/s?wd=%inputStr%
+        } else {
+            run https://www.google.com/search?q=%inputStr%
+        }
 
         return
     }
