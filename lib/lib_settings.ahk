@@ -72,7 +72,7 @@ gosub, keysInit
 SetTimer, globalSettings, -1
 SetTimer, setShortcutKey, -1
 SetTimer, hotStringInit, -1
-SetTimer, monitorSettingsFile, 500
+;SetTimer, monitorSettingsFile, 500
 return
 
 ;监控设置文件的修改，并作出改动
