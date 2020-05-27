@@ -53,6 +53,8 @@ transStart:
     ;      return 
     ;  }
 	ss:=RegExReplace(ss, "\s", " ") ;把所有空白符换成空格，因为如果有回车符的话，json转换时会出错
+	ss:=RegExReplace(ss, "_", " ") ;把所有_符换成空格
+	ss:=RegExReplace(ss, "-", " ") ;把所有-符换成空格
 	
 	;~ global 
 	
